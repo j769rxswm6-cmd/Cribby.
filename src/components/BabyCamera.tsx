@@ -48,6 +48,11 @@ export const BabyCamera: React.FC<BabyCameraProps> = ({ roomCode, onExit, refres
           await createPeerConnection(callerId, stream);
         });
 
+        socket.on('request-offer', async (callerId: string) => {
+          setIsConnected(true);
+          await createPeerConnection(callerId, stream);
+        });
+
         socket.on('signal', async (data: any) => {
           if (data.signal.type === 'answer') {
             await pcRef.current?.setRemoteDescription(new RTCSessionDescription(data.signal));

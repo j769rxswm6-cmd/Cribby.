@@ -31,6 +31,10 @@ async function startServer() {
       });
     });
 
+    socket.on("request-offer", (data) => {
+      io.to(data.to).emit("request-offer", socket.id);
+    });
+
     socket.on("motion-alert", (data) => {
       socket.to(data.roomId).emit("motion-alert", { roomId: data.roomId, timestamp: data.timestamp });
     });

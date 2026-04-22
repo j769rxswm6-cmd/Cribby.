@@ -14,6 +14,7 @@ export const ParentMonitor: React.FC<ParentMonitorProps> = ({ roomCode, onExit }
   const [isConnected, setIsConnected] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
   const [isMirrored, setIsMirrored] = useState(true);
+  const [playBlocked, setPlayBlocked] = useState(false);
   const [motionAlertTime, setMotionAlertTime] = useState<number>(0);
   
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -83,6 +84,11 @@ export const ParentMonitor: React.FC<ParentMonitorProps> = ({ roomCode, onExit }
 
         socket.emit('join-room', roomCode);
 
+        socket.on('user-joined', (babyId: string) => {
+           // If the baby joins after the parent is already in the room, request an offer
+           socket.emit('request-offer', { to: babyId });
+        });
+
       } catch (err) {
         console.error("Could not access microphone format", err);
         setError("Microphone access is recommended for two-way audio.");
@@ -117,6 +123,11 @@ export const ParentMonitor: React.FC<ParentMonitorProps> = ({ roomCode, onExit }
         pc.ontrack = (event) => {
           if (videoRef.current) {
             videoRef.current.srcObject = event.streams[0];
+            // Explicitly play and handle autoplay policies
+            videoRef.current.play().catch(e => {
+              console.warn('Autoplay blocked by browser policy:', e);
+              setPlayBlocked(true);
+            });
           }
         };
 
@@ -178,14 +189,27 @@ export const ParentMonitor: React.FC<ParentMonitorProps> = ({ roomCode, onExit }
         />
 
         {/* Header Badges */}
-        <div className="absolute top-4 left-4 z-20">
+        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
           <div className="bg-white/10 backdrop-blur-md rounded-full px-3 py-1 font-semibold tracking-wider text-[10px] uppercase text-white shadow-sm flex items-center space-x-2">
             <div className={cn("w-1.5 h-1.5 rounded-full", isConnected ? "bg-green-400" : "bg-yellow-400 animate-pulse")} />
             <span>{isConnected ? 'Live Feed' : 'Connecting...'}</span>
           </div>
+
+          {playBlocked && (
+            <button 
+              onClick={() => {
+                if (videoRef.current) {
+                  videoRef.current.play().then(() => setPlayBlocked(false)).catch(console.error);
+                }
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-full px-4 py-2 font-bold text-xs shadow-blue-500/30 transition-all border border-blue-400 animate-pulse pointer-events-auto"
+            >
+              TAP TO PLAY VIDEO
+            </button>
+          )}
         </div>
 
-        <div className="absolute top-4 right-4 z-20 flex items-center space-x-2">
+        <div className="absolute top-4 right-4 z-20 flex items-center space-x-2 pointer-events-auto">
           <button 
             onClick={() => setIsMirrored(!isMirrored)}
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md flex items-center justify-center border border-white/20 text-white shadow-sm"

@@ -1,0 +1,9 @@
+{
+  "name": "Cribby",
+  "description": "Local Wi-Fi baby monitor transmitting feed between two devices with motion detection and two-way audio.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

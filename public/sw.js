@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cribby-cache-v1';
+const CACHE_NAME = 'cribby-cache-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -19,12 +19,8 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
   );
 });
